@@ -2,6 +2,7 @@ package com.atguigu.gmall.pms.controller;
 
 import java.util.List;
 
+import com.atguigu.gmall.pms.vo.SpuVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +40,7 @@ public class SpuController {
      */
     @GetMapping
     @ApiOperation("分页查询")
-    public ResponseVo<PageResultVo> querySpuByPage(PageParamVo paramVo){
+    public ResponseVo<PageResultVo> querySpuByPage(PageParamVo paramVo) {
         PageResultVo pageResultVo = spuService.queryPage(paramVo);
 
         return ResponseVo.ok(pageResultVo);
@@ -51,8 +52,8 @@ public class SpuController {
      */
     @GetMapping("{id}")
     @ApiOperation("详情查询")
-    public ResponseVo<SpuEntity> querySpuById(@PathVariable("id") Long id){
-		SpuEntity spu = spuService.getById(id);
+    public ResponseVo<SpuEntity> querySpuById(@PathVariable("id") Long id) {
+        SpuEntity spu = spuService.getById(id);
 
         return ResponseVo.ok(spu);
     }
@@ -62,8 +63,8 @@ public class SpuController {
      */
     @PostMapping
     @ApiOperation("保存")
-    public ResponseVo<Object> save(@RequestBody SpuEntity spu){
-		spuService.save(spu);
+    public ResponseVo<Object> save(@RequestBody SpuVo spuVo){
+        spuService.bigSave(spuVo);
 
         return ResponseVo.ok();
     }
@@ -73,8 +74,8 @@ public class SpuController {
      */
     @PostMapping("/update")
     @ApiOperation("修改")
-    public ResponseVo update(@RequestBody SpuEntity spu){
-		spuService.updateById(spu);
+    public ResponseVo update(@RequestBody SpuEntity spu) {
+        spuService.updateById(spu);
 
         return ResponseVo.ok();
     }
@@ -84,10 +85,19 @@ public class SpuController {
      */
     @PostMapping("/delete")
     @ApiOperation("删除")
-    public ResponseVo delete(@RequestBody List<Long> ids){
-		spuService.removeByIds(ids);
+    public ResponseVo delete(@RequestBody List<Long> ids) {
+        spuService.removeByIds(ids);
 
         return ResponseVo.ok();
     }
 
+    /**
+     * spu商品信息查询
+     */
+    @ApiOperation("spu商品信息查询")
+    @GetMapping("category/{cid}")
+    public ResponseVo<PageResultVo> querySpuInfo(@PathVariable("cid") Long cid, PageParamVo pageParamVo) {
+        PageResultVo pageResultVo = this.spuService.querySpuInfo(cid, pageParamVo);
+        return ResponseVo.ok(pageResultVo);
+    }
 }

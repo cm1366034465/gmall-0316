@@ -25,6 +25,7 @@
         <module>gmall-ums</module>
         <module>gmall-oms</module>
         <module>gmall-gateway</module>
+        <module>gmall-sms-interface</module>
         <!--  <module>gmall-search</module>
           <module>gmall-cart-interface</module>-->
     </modules>
@@ -134,7 +135,7 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
-                <version>1.7.30</version>
+                <version>1.7.29</version>
             </dependency>
 
             <dependency>

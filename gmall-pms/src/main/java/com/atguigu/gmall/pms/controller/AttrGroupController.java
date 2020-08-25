@@ -2,6 +2,8 @@ package com.atguigu.gmall.pms.controller;
 
 import java.util.List;
 
+import com.atguigu.gmall.pms.vo.GroupVo;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,11 +37,22 @@ public class AttrGroupController {
     private AttrGroupService attrGroupService;
 
     /**
+     * 根据三级分类id查询规格组
+     */
+    @GetMapping("category/{cid}")
+    public ResponseVo<List<AttrGroupEntity>> queryGroupsByCid(@PathVariable("cid") Long cid) {
+        QueryWrapper<AttrGroupEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("category_id", cid);
+        List<AttrGroupEntity> list = this.attrGroupService.list(queryWrapper);
+        return ResponseVo.ok(list);
+    }
+
+    /**
      * 列表
      */
     @GetMapping
     @ApiOperation("分页查询")
-    public ResponseVo<PageResultVo> queryAttrGroupByPage(PageParamVo paramVo){
+    public ResponseVo<PageResultVo> queryAttrGroupByPage(PageParamVo paramVo) {
         PageResultVo pageResultVo = attrGroupService.queryPage(paramVo);
 
         return ResponseVo.ok(pageResultVo);
@@ -51,8 +64,8 @@ public class AttrGroupController {
      */
     @GetMapping("{id}")
     @ApiOperation("详情查询")
-    public ResponseVo<AttrGroupEntity> queryAttrGroupById(@PathVariable("id") Long id){
-		AttrGroupEntity attrGroup = attrGroupService.getById(id);
+    public ResponseVo<AttrGroupEntity> queryAttrGroupById(@PathVariable("id") Long id) {
+        AttrGroupEntity attrGroup = attrGroupService.getById(id);
 
         return ResponseVo.ok(attrGroup);
     }
@@ -62,8 +75,8 @@ public class AttrGroupController {
      */
     @PostMapping
     @ApiOperation("保存")
-    public ResponseVo<Object> save(@RequestBody AttrGroupEntity attrGroup){
-		attrGroupService.save(attrGroup);
+    public ResponseVo<Object> save(@RequestBody AttrGroupEntity attrGroup) {
+        attrGroupService.save(attrGroup);
 
         return ResponseVo.ok();
     }
@@ -73,8 +86,8 @@ public class AttrGroupController {
      */
     @PostMapping("/update")
     @ApiOperation("修改")
-    public ResponseVo update(@RequestBody AttrGroupEntity attrGroup){
-		attrGroupService.updateById(attrGroup);
+    public ResponseVo update(@RequestBody AttrGroupEntity attrGroup) {
+        attrGroupService.updateById(attrGroup);
 
         return ResponseVo.ok();
     }
@@ -84,10 +97,17 @@ public class AttrGroupController {
      */
     @PostMapping("/delete")
     @ApiOperation("删除")
-    public ResponseVo delete(@RequestBody List<Long> ids){
-		attrGroupService.removeByIds(ids);
+    public ResponseVo delete(@RequestBody List<Long> ids) {
+        attrGroupService.removeByIds(ids);
 
         return ResponseVo.ok();
     }
 
+    @ApiOperation("根据三级分类id查询分组及组下的规格参数")
+    @GetMapping("/withattrs/{catId}")
+    public ResponseVo<List<GroupVo>> queryByCid(@PathVariable("catId")Long cid){
+
+        List<GroupVo> groupVos = this.attrGroupService.queryByCid(cid);
+        return ResponseVo.ok(groupVos);
+    }
 }

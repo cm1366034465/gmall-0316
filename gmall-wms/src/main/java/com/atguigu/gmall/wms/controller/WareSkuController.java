@@ -2,6 +2,7 @@ package com.atguigu.gmall.wms.controller;
 
 import java.util.List;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +40,7 @@ public class WareSkuController {
      */
     @GetMapping
     @ApiOperation("分页查询")
-    public ResponseVo<PageResultVo> queryWareSkuByPage(PageParamVo paramVo){
+    public ResponseVo<PageResultVo> queryWareSkuByPage(PageParamVo paramVo) {
         PageResultVo pageResultVo = wareSkuService.queryPage(paramVo);
 
         return ResponseVo.ok(pageResultVo);
@@ -51,8 +52,8 @@ public class WareSkuController {
      */
     @GetMapping("{id}")
     @ApiOperation("详情查询")
-    public ResponseVo<WareSkuEntity> queryWareSkuById(@PathVariable("id") Long id){
-		WareSkuEntity wareSku = wareSkuService.getById(id);
+    public ResponseVo<WareSkuEntity> queryWareSkuById(@PathVariable("id") Long id) {
+        WareSkuEntity wareSku = wareSkuService.getById(id);
 
         return ResponseVo.ok(wareSku);
     }
@@ -62,8 +63,8 @@ public class WareSkuController {
      */
     @PostMapping
     @ApiOperation("保存")
-    public ResponseVo<Object> save(@RequestBody WareSkuEntity wareSku){
-		wareSkuService.save(wareSku);
+    public ResponseVo<Object> save(@RequestBody WareSkuEntity wareSku) {
+        wareSkuService.save(wareSku);
 
         return ResponseVo.ok();
     }
@@ -73,8 +74,8 @@ public class WareSkuController {
      */
     @PostMapping("/update")
     @ApiOperation("修改")
-    public ResponseVo update(@RequestBody WareSkuEntity wareSku){
-		wareSkuService.updateById(wareSku);
+    public ResponseVo update(@RequestBody WareSkuEntity wareSku) {
+        wareSkuService.updateById(wareSku);
 
         return ResponseVo.ok();
     }
@@ -84,10 +85,17 @@ public class WareSkuController {
      */
     @PostMapping("/delete")
     @ApiOperation("删除")
-    public ResponseVo delete(@RequestBody List<Long> ids){
-		wareSkuService.removeByIds(ids);
+    public ResponseVo delete(@RequestBody List<Long> ids) {
+        wareSkuService.removeByIds(ids);
 
         return ResponseVo.ok();
     }
 
+    @ApiOperation("根据skuId查询库存信息")
+    @GetMapping("sku/{skuId}")
+    public ResponseVo<List<WareSkuEntity>> queryWareSkuBySkuId(@PathVariable("skuId") Long skuId) {
+
+        List<WareSkuEntity> wareSkuEntities = this.wareSkuService.list(new QueryWrapper<WareSkuEntity>().eq("sku_id", skuId));
+        return ResponseVo.ok(wareSkuEntities);
+    }
 }

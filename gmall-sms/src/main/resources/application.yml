@@ -1,2 +1,7 @@
 server:
   port: 18083
+spring:
+  cloud:
+    alibaba:
+      seata:
+        tx-service-group: sms_service_tx_group
