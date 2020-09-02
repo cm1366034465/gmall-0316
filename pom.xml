@@ -26,6 +26,9 @@
         <module>gmall-oms</module>
         <module>gmall-gateway</module>
         <module>gmall-sms-interface</module>
+        <module>gmall-search</module>
+        <module>gmall-pms-interface</module>
+        <module>gmall-wms-interface</module>
         <!--  <module>gmall-search</module>
           <module>gmall-cart-interface</module>-->
     </modules>

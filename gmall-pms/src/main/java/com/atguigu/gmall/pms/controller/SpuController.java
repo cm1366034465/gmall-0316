@@ -46,6 +46,17 @@ public class SpuController {
         return ResponseVo.ok(pageResultVo);
     }
 
+    /**
+     * 20200828-搜索系统需要
+     */
+    @PostMapping("page")
+    @ApiOperation("分页查询")
+    public ResponseVo<List<SpuEntity>> querySpusByPage(@RequestBody PageParamVo paramVo) {
+        PageResultVo page = spuService.queryPage(paramVo);
+        List<SpuEntity> list = (List<SpuEntity>) page.getList();
+        return ResponseVo.ok(list);
+    }
+
 
     /**
      * 信息
@@ -63,7 +74,7 @@ public class SpuController {
      */
     @PostMapping
     @ApiOperation("保存")
-    public ResponseVo<Object> save(@RequestBody SpuVo spuVo){
+    public ResponseVo<Object> save(@RequestBody SpuVo spuVo) {
         spuService.bigSave(spuVo);
 
         return ResponseVo.ok();

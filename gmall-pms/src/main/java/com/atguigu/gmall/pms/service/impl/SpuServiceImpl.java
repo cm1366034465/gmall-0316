@@ -11,7 +11,9 @@ import com.atguigu.gmall.pms.vo.SpuVo;
 import com.atguigu.gmall.sms.vo.SkuSaleVo;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import io.seata.spring.annotation.GlobalTransactional;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 @Service("spuService")
+@Slf4j
 public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements SpuService {
 
     @Override
@@ -105,8 +108,10 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
         /// 2. 保存sku相关信息
         saveSku(spuVo, spuId);
 
+        // 20200901 00:13
+        sendMessage(spuVo.getId(), "insert");
         // 最后制造异常
-        int i = 1 / 0;
+        // int i = 1 / 0;
     }
 
     private void saveSku(SpuVo spuVo, Long spuId) {
@@ -194,5 +199,20 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
         this.save(spuVo);
         return spuVo.getId();
     }
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    private void sendMessage(Long id, String type) {
+        // 发送消息
+        try {
+            this.rabbitTemplate.convertAndSend("item_exchange", "item." + type, id);
+        } catch (Exception e) {
+            // logger.error("{}商品消息发送异常，商品id：{}", type, id, e);
+            // log.error("消费没有到达队列：交换机{};路由键{};消息内容{}", exchange, routingKey, new String(message.getBody()));
+            log.error("{}商品消息发送异常，商品id：{}", type, id, e);
+        }
+    }
+
 
 }
