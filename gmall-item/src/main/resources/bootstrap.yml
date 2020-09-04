@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: item-service
+  cloud:
+    nacos:
+      config:
+        server-addr: localhost:8848
+        namespace: da5153f0-2f91-499d-98bc-cc7502da9939
+        group: dev
+        file-extension: yml

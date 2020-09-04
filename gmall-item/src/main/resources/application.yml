@@ -1,0 +1,8 @@
+server:
+  port: 18088
+
+threadPool:
+  coreSize: 10
+  maxSize: 100
+  timeout: 60
+  blockingSize: 1000

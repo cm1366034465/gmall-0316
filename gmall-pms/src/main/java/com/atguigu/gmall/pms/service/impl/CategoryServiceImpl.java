@@ -3,6 +3,7 @@ package com.atguigu.gmall.pms.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +37,20 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, CategoryEnt
     @Override
     public List<CategoryEntity> queryCategoriesWithSubByPid(Long pid) {
         return this.categoryMapper.queryCategoriesWithSubByPid(pid);
+    }
+
+    @Override
+    public List<CategoryEntity> query123CategoriesByCid3(Long cid) {
+        // 根据三级分类id查询三级分类
+        CategoryEntity lv3categoryEntity = this.categoryMapper.selectById(cid);
+
+        // 三级分类的pid作为id查询二级分类
+        CategoryEntity lv2categoryEntity = this.categoryMapper.selectById(lv3categoryEntity.getParentId());
+
+        // 二级分类的pid作为id查询一级分类
+        CategoryEntity lv1categoryEntity = this.categoryMapper.selectById(lv2categoryEntity.getParentId());
+
+        return Arrays.asList(lv1categoryEntity, lv2categoryEntity, lv3categoryEntity);
     }
 
 }

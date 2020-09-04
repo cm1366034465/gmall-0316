@@ -108,4 +108,10 @@ public class CategoryController {
         return ResponseVo.ok();
     }
 
+    @GetMapping("all/{cid}")
+    public ResponseVo<List<CategoryEntity>> query123CategoriesByCid3(@PathVariable("cid") Long cid) {
+        List<CategoryEntity> categoryEntities = this.categoryService.query123CategoriesByCid3(cid);
+        return ResponseVo.ok(categoryEntities);
+    }
+
 }

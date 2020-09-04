@@ -16,4 +16,16 @@
             a.sku_id = #{skuId}
         AND b.search_type = 1;
     </select>
+    <select id="querySaleAttrMappingSkuIdBySpuId" resultType="java.util.Map">
+        SELECT
+            a.sku_id,
+            GROUP_CONCAT(a.attr_value order by attr_id asc) as attr_values
+        FROM
+            pms_sku_attr_value a
+        INNER JOIN pms_sku b ON a.sku_id = b.id
+        WHERE
+            b.spu_id = #{spuId}
+        GROUP BY
+            a.sku_id
+    </select>
 </mapper>

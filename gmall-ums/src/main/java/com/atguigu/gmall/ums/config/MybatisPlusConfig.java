@@ -1,4 +1,4 @@
-package com.atguigu.gmall.pms.config;
+package com.atguigu.gmall.ums.config;
 
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.pagination.optimize.JsqlParserCountOptimize;

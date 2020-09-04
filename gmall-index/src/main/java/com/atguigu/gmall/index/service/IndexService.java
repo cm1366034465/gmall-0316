@@ -2,15 +2,18 @@ package com.atguigu.gmall.index.service;
 
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.common.bean.ResponseVo;
+import com.atguigu.gmall.index.aspect.GmallCache;
 import com.atguigu.gmall.index.feign.GmallPmsClient;
 import com.atguigu.gmall.index.utils.DistributedLock;
 import com.atguigu.gmall.pms.entity.CategoryEntity;
 import org.apache.commons.lang.StringUtils;
+import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
@@ -54,7 +57,20 @@ public class IndexService {
         return categoryEntities;
     }
 
+    @GmallCache(prefix = KEY_PREFIX, lock = "lock", timeout = 43200, random = 10080)
     public List<CategoryEntity> queryCategoriesWithSubByPid(Long pid) {
+        ResponseVo<List<CategoryEntity>> listResponseVo = this.pmsClient.queryCategoriesWithSubByPid(pid);
+        List<CategoryEntity> categoryEntities = listResponseVo.getData();
+        return categoryEntities;
+    }
+
+    /**
+     * 旧方式
+     *
+     * @param pid
+     * @return
+     */
+    public List<CategoryEntity> queryCategoriesWithSubByPid2(Long pid) {
         // 1.先查询缓存
         // key的设计 一级分类的id作为key，添加前缀key_prefix
         String json = this.redisTemplate.opsForValue().get(KEY_PREFIX + pid);
@@ -63,7 +79,14 @@ public class IndexService {
         }
         // 20200902 19:22 增加分布式锁
         // 为了防止缓存的击穿，需要添加分布式锁
+        RLock lock = this.redissonClient.getFairLock("lock:"+pid);
+        lock.lock();
         // 再查询缓存，缓存中有，直接返回
+        String json2 = this.redisTemplate.opsForValue().get(KEY_PREFIX + pid);
+        if (StringUtils.isNotBlank(json2)) {
+            lock.unlock();
+            return JSON.parseArray(json2, CategoryEntity.class);
+        }
 
         // 2.在远程查询数据库，并放入缓存
         ResponseVo<List<CategoryEntity>> listResponseVo = this.pmsClient.queryCategoriesWithSubByPid(pid);
@@ -71,6 +94,10 @@ public class IndexService {
 
         // 为了解决缓存穿透，数据即使为null也要缓存，为了防止缓存雪崩，给缓存时间添加随机值
         this.redisTemplate.opsForValue().set(KEY_PREFIX + pid, JSON.toJSONString(categoryEntities), 30 + new Random().nextInt(10), TimeUnit.DAYS);
+
+        // 释放分布式锁 或者再finally中完成释放锁
+        lock.unlock();
+
         return categoryEntities;
     }
 
