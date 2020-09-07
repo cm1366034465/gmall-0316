@@ -5,7 +5,6 @@ import com.atguigu.gmall.common.bean.ResponseVo;
 import com.atguigu.gmall.pms.entity.*;
 import com.atguigu.gmall.pms.vo.ItemGroupVo;
 import com.atguigu.gmall.pms.vo.SaleAttrValueVo;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

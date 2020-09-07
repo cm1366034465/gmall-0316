@@ -111,7 +111,7 @@ public class ItemService {
             // 根据spuId查询spu下所有sku的选择集合
             ResponseVo<List<SaleAttrValueVo>> salesResponseVo = this.pmsClient.queryAllAttrValueBySpuId(skuEntity.getSpuId());
             itemVo.setSaleAttrs(salesResponseVo.getData());
-            System.out.println("saleAttrs = " + salesResponseVo.getData());
+            // System.out.println("saleAttrs = " + salesResponseVo.getData());
         }, threadPoolExecutor);
 
         CompletableFuture<Void> skuSaleCompletableFuture = CompletableFuture.runAsync(() -> {
@@ -122,7 +122,7 @@ public class ItemService {
                 // 20200903 SkuAttrValueEntity::getAttrName 更改为 SkuAttrValueEntity::getAttrValue
                 Map<Long, String> saleAttr = skuAttrValueEntities.stream().collect(Collectors.toMap(SkuAttrValueEntity::getAttrId, SkuAttrValueEntity::getAttrValue));
                 itemVo.setSaleAttr(saleAttr);
-                System.out.println("saleAttr = " + saleAttr);
+                // System.out.println("saleAttr = " + saleAttr);
             }
         }, threadPoolExecutor);
 
@@ -130,7 +130,7 @@ public class ItemService {
             // 根据spuId 查询spu下所有sku的销售属性组合与skuId的映射属性
             ResponseVo<String> stringResponseVo = this.pmsClient.querySaleAttrMappingSkuIdBySpuId(skuEntity.getSpuId());
             String jsonStr = stringResponseVo.getData();
-            System.out.println("jsonStr = " + jsonStr);
+            // System.out.println("jsonStr = " + jsonStr);
             itemVo.setSkusJson(jsonStr);
         }, threadPoolExecutor);
 
@@ -152,6 +152,7 @@ public class ItemService {
 
         CompletableFuture.allOf(categoryCompletableFuture, brandCompletableFuture, spuCompletableFuture, imagesCompletableFuture, saleCompletableFuture,
                 wareCompletableFuture, saleAttrCompletableFuture, skuSaleCompletableFuture, mappingCompletableFuture, spuDescCompletableFuture, groupCompletableFuture).join();
+
         return itemVo;
     }
 }

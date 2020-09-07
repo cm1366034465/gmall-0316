@@ -42,4 +42,44 @@ public class IndexController {
         indexService.testLock();
         return ResponseVo.ok(null);
     }
+
+    @GetMapping("index/read")
+    @ResponseBody
+    public ResponseVo<String> read(){
+        String msg = indexService.readLock();
+        return ResponseVo.ok(msg);
+    }
+
+    @GetMapping("index/write")
+    @ResponseBody
+    public ResponseVo<String> write(){
+        String msg = indexService.writeLock();
+        return ResponseVo.ok(msg);
+    }
+
+    /**
+     * 等待
+     * @return
+     */
+    @GetMapping("index/latch")
+    @ResponseBody
+    public ResponseVo<Object> countDownLatch(){
+
+        String msg = indexService.latch();
+
+        return ResponseVo.ok(msg);
+    }
+
+    /**
+     * 计数
+     * @return
+     */
+    @GetMapping("index/out")
+    @ResponseBody
+    public ResponseVo<Object> out(){
+
+        String msg = indexService.countDown();
+
+        return ResponseVo.ok(msg);
+    }
 }

@@ -1,5 +1,6 @@
 package com.atguigu.gmall.index.utils;
 
+import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -30,6 +31,8 @@ public class DistributedLock {
                 e.printStackTrace();
             }
         }
+        // 锁续期
+        this.renewTime(lockName, expire);
         return true;
     }
 
@@ -42,19 +45,24 @@ public class DistributedLock {
     }
 
     /**
+     * 锁延期
+     * 线程等待超时时间的2/3时间后,执行锁延时代码,直到业务逻辑执行完毕,因此在此过程中,其他线程无法获取到锁,保证了线程安全性
      * 自动续期实现 20200904 09:20
+     *
+     * @param lockName
+     * @param expire   单位：毫秒
      */
-
-    public void renewTime(String lockName, Long expire) {
-        String script = "";
+    private void renewTime(String lockName, Long expire) {
+        String script = "if redis.call('exists', KEYS[1]) == 1 then return redis.call('expire', KEYS[1], ARGV[1]) else return 0 end";
         new Thread(() -> {
-            while (this.redisTemplate.execute(new DefaultRedisScript<>(script, Boolean.class), Arrays.asList(lockName), expire.toString())) {
+            while (this.redisTemplate.execute(new DefaultRedisScript<>(script, Boolean.class), Lists.newArrayList(lockName), expire.toString())) {
                 try {
-                    Thread.sleep(expire*1000/3);
+                    // 到达过期时间的2/3时间，自动续期
+                    Thread.sleep(expire * 2 / 3);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-        }, "").start();
+        }).start();
     }
 }

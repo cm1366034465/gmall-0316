@@ -30,6 +30,11 @@
         <module>gmall-pms-interface</module>
         <module>gmall-wms-interface</module>
         <module>gmall-ums-interface</module>
+        <module>gmall-cart-interface</module>
+        <module>gmall-cart</module>
+        <module>gmall-auth</module>
+        <module>gmall-index</module>
+        <module>gmall-item</module>
         <!--  <module>gmall-search</module>
           <module>gmall-cart-interface</module>-->
     </modules>

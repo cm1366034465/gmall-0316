@@ -68,6 +68,7 @@ public class SkuAttrValueServiceImpl extends ServiceImpl<SkuAttrValueMapper, Sku
         if (CollectionUtils.isEmpty(skuAttrValueEntities)) {
             return null;
         }
+
         Map<Long, List<SkuAttrValueEntity>> map = skuAttrValueEntities.stream().collect(Collectors.groupingBy(SkuAttrValueEntity::getAttrId));
 
         List<SaleAttrValueVo> saleAttrValueVos = new ArrayList<>();

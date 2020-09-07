@@ -7,7 +7,9 @@ import com.atguigu.gmall.index.feign.GmallPmsClient;
 import com.atguigu.gmall.index.utils.DistributedLock;
 import com.atguigu.gmall.pms.entity.CategoryEntity;
 import org.apache.commons.lang.StringUtils;
+import org.redisson.api.RCountDownLatch;
 import org.redisson.api.RLock;
+import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -79,7 +81,7 @@ public class IndexService {
         }
         // 20200902 19:22 增加分布式锁
         // 为了防止缓存的击穿，需要添加分布式锁
-        RLock lock = this.redissonClient.getFairLock("lock:"+pid);
+        RLock lock = this.redissonClient.getFairLock("lock:" + pid);
         lock.lock();
         // 再查询缓存，缓存中有，直接返回
         String json2 = this.redisTemplate.opsForValue().get(KEY_PREFIX + pid);
@@ -115,8 +117,24 @@ public class IndexService {
         }
     }
 
-    // 测试可重入锁
     public void testLock() {
+
+        RLock lock = this.redissonClient.getLock("lock");
+        lock.lock(10, TimeUnit.SECONDS);
+        // 查询redis中的num值
+        String value = this.redisTemplate.opsForValue().get("num");
+        // 没有该值return
+        if (StringUtils.isBlank(value)) {
+            return;
+        }
+        // 有值就转成成int
+        int num = Integer.parseInt(value);
+        // 把redis中的num值+1
+        this.redisTemplate.opsForValue().set("num", String.valueOf(++num));
+        // lock.unlock();
+    }
+
+    public void testLock1() {
         // 加锁
         String uuid = UUID.randomUUID().toString();
         Boolean lock = this.distributedLock.tryLock("lock", uuid, 30l);
@@ -135,83 +153,65 @@ public class IndexService {
             // 放入redis
             this.redisTemplate.opsForValue().set("num", String.valueOf(num));
 
+            // 睡眠60s，锁过期时间30s。每隔20s自动续期
+            try {
+                TimeUnit.SECONDS.sleep(60);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
             // 测试可重入性
-            this.testSubLock(uuid);
+            // this.testSubLock(uuid);
 
             // 释放锁
             this.distributedLock.unlock("lock", uuid);
         }
     }
 
-    // synchronized 本地锁在集群状况下也无法解决问题
-    public void testLock2() {
-        String uuid = UUID.randomUUID().toString();
-        Boolean lock = this.redisTemplate.opsForValue().setIfAbsent("lock", uuid, 10, TimeUnit.SECONDS);
-        if (!lock) {
-            // 获取失败则重试
-            try {
-                Thread.sleep(50);
-                testLock();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        } else {
-            // 获取成功执行业务
+    public String readLock() {
+        // 初始化读写锁
+        RReadWriteLock readWriteLock = redissonClient.getReadWriteLock("readwriteLock");
+        RLock rLock = readWriteLock.readLock(); // 获取读锁
 
-            // 查询redis中的num值
-            String value = this.redisTemplate.opsForValue().get("num");
-            // 没有该值 设置后return
-            if (StringUtils.isBlank(value)) {
-                this.redisTemplate.opsForValue().set("num", "0");
-                return;
-            }
-            // 有值就转成成int
-            int num = Integer.parseInt(value);
-            // 把redis中的num值+1
-            this.redisTemplate.opsForValue().set("num", String.valueOf(++num));
+        rLock.lock(10, TimeUnit.SECONDS); // 加10s锁
 
-            // 执行完毕释放锁
-            // 防止误删，需要判断是不是自己的锁  但判断和删除操作没有原子性
-            // if get lock 是否等于 uuid then  return del lock   else return 0
-/*            if (StringUtils.equals(uuid, this.redisTemplate.opsForValue().get("lock"))) {
-                this.redisTemplate.delete("lock");
-            }*/
-            // lua 脚本
-            String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
-            this.redisTemplate.execute(new DefaultRedisScript<>(script, Boolean.class), Arrays.asList("lock"), uuid);
-        }
+        String msg = this.redisTemplate.opsForValue().get("msg");
+
+        //rLock.unlock(); // 解锁
+        return msg;
     }
 
-    public void testLockyx() {
-        // 1. 从redis中获取锁,setnx
-        String uuid = UUID.randomUUID().toString();
-        Boolean lock = this.redisTemplate.opsForValue().setIfAbsent("lock", uuid, 30, TimeUnit.SECONDS);
-        if (lock) {
-            // 查询redis中的num值
-            String value = this.redisTemplate.opsForValue().get("num");
-            // 没有该值return
-            if (StringUtils.isBlank(value)) {
-                return;
-            }
-            // 有值就转成成int
-            int num = Integer.parseInt(value);
-            // 把redis中的num值+1
-            this.redisTemplate.opsForValue().set("num", String.valueOf(++num));
+    public String writeLock() {
+        // 初始化读写锁
+        RReadWriteLock readWriteLock = redissonClient.getReadWriteLock("readwriteLock");
+        RLock rLock = readWriteLock.writeLock(); // 获取写锁
 
-            // 2. 释放锁 del
-/*            if (StringUtils.equals(uuid, this.redisTemplate.opsForValue().get("lock"))) {
-                this.redisTemplate.delete("lock");
-            }*/
-            String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
-            this.redisTemplate.execute(new DefaultRedisScript<>(script), Arrays.asList("lock"), uuid);
-        } else {
-            // 3. 每隔1秒钟回调一次，再次尝试获取锁
-            try {
-                Thread.sleep(1000);
-                testLock();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        rLock.lock(10, TimeUnit.SECONDS); // 加10s锁
+
+        this.redisTemplate.opsForValue().set("msg", UUID.randomUUID().toString());
+
+        //rLock.unlock(); // 解锁
+        return "成功写入了内容。。。。。。";
     }
+
+    public String latch() {
+        RCountDownLatch countDownLatch = this.redissonClient.getCountDownLatch("countdown");
+        try {
+            countDownLatch.trySetCount(6);
+            countDownLatch.await();
+
+            return "关门了。。。。。";
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public String countDown() {
+        RCountDownLatch countDownLatch = this.redissonClient.getCountDownLatch("countdown");
+
+        countDownLatch.countDown();
+        return "出来了一个人。。。";
+    }
+
 }
