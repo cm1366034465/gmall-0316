@@ -37,16 +37,21 @@ public class AuthGatewayFilterFactory extends AbstractGatewayFilterFactory<AuthG
     private JwtProperties jwtProperties;
 
     /**
-     * 一定要重写构造方法
+     * 3、重写构造方法
      * 告诉父类，这里使用PathConfig对象接收配置内容
      */
     public AuthGatewayFilterFactory() {
         super(PathConfig.class);
     }
 
+    /**
+     * 2、指定泛型
+     * @param config
+     * @return
+     */
     @Override
     public GatewayFilter apply(PathConfig config) {
-        // 实现GatewaFilter接口
+        // 实现GatewayFilter接口
         return new GatewayFilter() {
             @Override
             public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -84,7 +89,7 @@ public class AuthGatewayFilterFactory extends AbstractGatewayFilterFactory<AuthG
                     // 判断当前用户ip和token中的ip是否一致，防止盗用
                     String ip = map.get("ip").toString();
                     String curIp = IpUtil.getIpAddressAtGateway(request);
-                    if (StringUtils.equals(ip, curIp)) {
+                    if (!StringUtils.equals(ip, curIp)) {
                         return interceptor(request, response);
                     }
                     // 解析后的用户信息，传递给后续服务
@@ -109,7 +114,7 @@ public class AuthGatewayFilterFactory extends AbstractGatewayFilterFactory<AuthG
     }
 
     /**
-     * 指定字段顺序
+     * 4、指定字段顺序
      * 可以通过不同的字段分别读取：/toLogin,/login
      * 通过一个集合字段读取所有的路径
      *
@@ -121,7 +126,8 @@ public class AuthGatewayFilterFactory extends AbstractGatewayFilterFactory<AuthG
     }
 
     /**
-     * 指定读取字段的结果集类型
+     * 5、指定读取字段的结果集类型
+     *
      * 默认通过map的方式，把配置读取到不同字段
      * 例如：/toLogin,/login
      * 由于只指定了一个字段，只能接收/toLogin
@@ -134,7 +140,7 @@ public class AuthGatewayFilterFactory extends AbstractGatewayFilterFactory<AuthG
     }
 
     /**
-     * 读取配置的内部类
+     * 1、读取配置的内部类
      */
     @Data
     public static class PathConfig {

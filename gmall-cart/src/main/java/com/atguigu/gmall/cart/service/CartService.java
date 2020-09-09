@@ -290,4 +290,14 @@ public class CartService {
             this.cartAsyncService.scheduledInsertCart(cart);
         }
     }
+
+    public List<Cart> queryCheckedCartByUserId(Long userId) {
+        String key = KEY_PREFIX + userId;
+        BoundHashOperations<String, Object, Object> hashOps = this.redisTemplate.boundHashOps(key);
+        List<Object> cartJsons = hashOps.values();
+        if (CollectionUtils.isEmpty(cartJsons)) {
+            return null;
+        }
+        return cartJsons.stream().map(cartJson -> JSON.parseObject(cartJson.toString(), Cart.class)).filter(cart -> cart.getCheck()).collect(Collectors.toList());
+    }
 }

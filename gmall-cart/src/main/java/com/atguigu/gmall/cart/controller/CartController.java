@@ -92,6 +92,13 @@ public class CartController {
         return ResponseVo.ok();
     }
 
+    @GetMapping("user/{userId}")
+    @ResponseBody
+    public ResponseVo<List<Cart>> queryCheckedCartByUserId(@PathVariable("userId") Long userId) {
+        List<Cart> carts = this.cartService.queryCheckedCartByUserId(userId);
+        return ResponseVo.ok(carts);
+    }
+
     @GetMapping("test")
     @ResponseBody
     public String test() throws ExecutionException, InterruptedException {
