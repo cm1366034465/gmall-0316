@@ -44,6 +44,13 @@ public class CartListener {
     // 购物车前缀
     private static final String KEY_PREFIX = "cart:info:";
 
+    /**
+     * 同步价格
+     * @param spuId
+     * @param channel
+     * @param message
+     * @throws IOException
+     */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "CART-ITEM-QUEUE", durable = "true"),
             exchange = @Exchange(value = "PMS-ITEM-EXCHANGE", ignoreDeclarationExceptions = "true", type = ExchangeTypes.TOPIC),

@@ -55,6 +55,9 @@ public class CartJobHandler {
             List<Object> cartJsons = hashOps.values();
             // 如果该用户购物车数据为空，则直接进入下次循环
             if (CollectionUtils.isEmpty(cartJsons)) {
+                // 20200911 16:00 为了程序的健壮性，当前查询的用户不存在redis购物车时，在进入下一次循环前，先获取下一个用户的id，便面死循环的存在。
+                // 实际上如果需要同步的用户，必然redis中购物车不为空。
+                userId = listOps.rightPop();
                 continue;
             }
 

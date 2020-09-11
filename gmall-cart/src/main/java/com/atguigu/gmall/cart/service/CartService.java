@@ -95,12 +95,6 @@ public class CartService {
                 cart.setDefaultImage(skuEntity.getDefaultImage());
             }
 
-            ResponseVo<List<WareSkuEntity>> wareResponseVo = this.wmsClient.queryWareSkuBySkuId(cart.getSkuId());
-            List<WareSkuEntity> wareSkuEntities = wareResponseVo.getData();
-            if (!CollectionUtils.isEmpty(wareSkuEntities)) {
-                cart.setStore(wareSkuEntities.stream().anyMatch(wareSkuEntity -> wareSkuEntity.getStock() - wareSkuEntity.getStockLocked() > 0));
-            }
-
             ResponseVo<List<SkuAttrValueEntity>> skuResponseVo = this.pmsClient.querySaleAttrValueBySkuId(cart.getSkuId());
             List<SkuAttrValueEntity> skuAttrValueEntities = skuResponseVo.getData();
             if (skuAttrValueEntities != null) {
@@ -111,6 +105,12 @@ public class CartService {
             List<ItemSaleVo> itemSaleVos = itemResponseVo.getData();
             if (itemSaleVos != null) {
                 cart.setSales(JSON.toJSONString(itemSaleVos));
+            }
+
+            ResponseVo<List<WareSkuEntity>> wareResponseVo = this.wmsClient.queryWareSkuBySkuId(cart.getSkuId());
+            List<WareSkuEntity> wareSkuEntities = wareResponseVo.getData();
+            if (!CollectionUtils.isEmpty(wareSkuEntities)) {
+                cart.setStore(wareSkuEntities.stream().anyMatch(wareSkuEntity -> wareSkuEntity.getStock() - wareSkuEntity.getStockLocked() > 0));
             }
 
             // 缓存实时价格

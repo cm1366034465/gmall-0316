@@ -2,6 +2,8 @@ package com.atguigu.gmall.oms.listener;
 
 import com.atguigu.gmall.oms.entity.OrderEntity;
 import com.atguigu.gmall.oms.mapper.OrderMapper;
+import com.atguigu.gmall.oms.service.OrderService;
+import com.atguigu.gmall.oms.vo.UserBoundVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,9 @@ public class OrderListener {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private OrderService orderService;
 
     /**
      * 更改订单为无效状态
@@ -86,4 +91,27 @@ public class OrderListener {
         }
     }
 
+
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = "ORDER-SUCCESS-QUEUE", durable = "true"),
+            exchange = @Exchange(value = "ORDER-EXCHANGE", ignoreDeclarationExceptions = "true"),
+            key = {"order.success"}
+    ))
+    public void successOrder(String orderToken, Channel channel, Message message) throws IOException {
+        // 更新订单状态
+        int flag = this.orderMapper.successOrder(orderToken);
+        if (flag == 1) {
+            // 发送消息给wms减库存 真正
+            this.rabbitTemplate.convertAndSend("ORDER-EXCHANGE", "stock.minus", orderToken);
+
+            // 发送消息给ums加积分
+            OrderEntity orderEntity = this.orderService.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderToken));
+            UserBoundVo userBoundVO = new UserBoundVo();
+            userBoundVO.setUserId(orderEntity.getUserId());
+            userBoundVO.setIntegration(orderEntity.getIntegration());
+            userBoundVO.setGrowth(orderEntity.getGrowth());
+            this.rabbitTemplate.convertAndSend("ORDER-EXCHANGE", "bound.plus", userBoundVO);
+        }
+        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+    }
 }

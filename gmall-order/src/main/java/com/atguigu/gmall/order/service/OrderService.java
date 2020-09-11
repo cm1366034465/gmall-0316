@@ -149,9 +149,7 @@ public class OrderService {
         if (StringUtils.isBlank(orderToken)) {
             throw new RuntimeException("没有orderToken");
         }
-        String scripts = "if redis.call('get', KEYS[1]) == ARGV[1] \" +\n" +
-                "        \"then return redis.call('del', KEYS[1]) \" +\n" +
-                "        \"else return 0 end";
+        String scripts = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
         Boolean flag = this.redisTemplate.execute(new DefaultRedisScript<>(scripts, Boolean.class), Arrays.asList(KEY_PREFIX + orderToken), orderToken);
 
         if (!flag) {
@@ -183,7 +181,7 @@ public class OrderService {
         List<SkuLockVo> lockVos = items.stream().map(item -> {
             SkuLockVo lockVo = new SkuLockVo();
             lockVo.setSkuId(item.getSkuId());
-            lockVo.setSkuId(item.getCount().longValue());
+            lockVo.setCount(item.getCount().intValue());
             return lockVo;
         }).collect(Collectors.toList());
         ResponseVo<List<SkuLockVo>> skuLockResponseVo = this.wmsClient.checkAndLock(lockVos, orderToken);

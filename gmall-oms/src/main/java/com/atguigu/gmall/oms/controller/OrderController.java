@@ -4,15 +4,11 @@ import java.util.List;
 
 import com.atguigu.gmall.oms.entity.OrderEntity;
 import com.atguigu.gmall.oms.vo.OrderSubmitVo;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.atguigu.gmall.oms.service.OrderService;
 import com.atguigu.gmall.common.bean.PageResultVo;
@@ -33,6 +29,16 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+
+    /**
+     * 根据orderToken 订单编号 查询订单
+     */
+    @GetMapping("token/{orderToken}")
+    public ResponseVo<OrderEntity> queryOrderByToken(@PathVariable("orderToken") String orderToken, @RequestParam("userId") Long userId) {
+        OrderEntity orderEntity = this.orderService.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderToken).eq("user_id", userId));
+        return ResponseVo.ok(orderEntity);
+    }
+
 
     /**
      *

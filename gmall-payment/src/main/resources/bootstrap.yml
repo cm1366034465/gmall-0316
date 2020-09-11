@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: payment-service
+  cloud:
+    nacos:
+      config:
+        server-addr: localhost:8848
+        namespace: 0aed4230-9c84-45eb-ab96-b90f8906670b
+        group: dev
+        file-extension: yml
